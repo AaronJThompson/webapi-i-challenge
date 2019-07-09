@@ -16,7 +16,9 @@ const getUser = (id, res) => {
             }
         })
         .catch(error => {
-            res.status(404).json({ error: "The user with the specified ID does not exist." });
+            if (res) {
+                res.status(404).json({ error: "The user with the specified ID does not exist." });
+            }
             reject(error);
         })
     })
@@ -33,13 +35,29 @@ server.get('/api/users', (req,res) => {
 })
 
 server.get('/api/users/:id', (req,res) => {
-    getUser(req.params.id)
+    getUser(req.params.i, res)
     .then(user => {
         res.status(200).json(user);
     })
     .catch(error => {
         return;
     });
+})
+
+server.post('/api/users', (req, res) => {
+    if(!req.body.name || !req.body.bio) {
+        res.status(400).json({ error: "Please provide name and bio for the user." })
+    }
+    db.insert(req.body)
+    .then(data => {
+        getUser(data.id)
+        .then(user => {
+            res.status(201).json(user);
+        })
+    })
+    .catch(error => {
+        res.status(500).json({ error: "There was an error while saving the user to the database" });
+    })
 })
 
 server.listen(3000, (req, res) => {
