@@ -8,11 +8,11 @@ server.use(express.json());
 const getUser = (id, res) => {
     return new Promise((resolve, reject) => {
         db.findById(id)
-        .then(users => {
-            if(!user || user.length === 0){
-                reject("User doesn't exist");
+        .then(user => {
+            if(!user){
+                throw new Error("User doesn't exist");
             } else {
-                resolve(users[0]);
+                resolve(user);
             }
         })
         .catch(error => {
@@ -36,7 +36,8 @@ server.get('/api/users', (req,res) => {
 
 server.post('/api/users', (req, res) => {
     if(!req.body.name || !req.body.bio) {
-        res.status(400).json({ error: "Please provide name and bio for the user." })
+        res.status(400).json({ error: "Please provide name and bio for the user." });
+        return;
     }
     db.insert(req.body)
     .then(data => {
@@ -57,7 +58,7 @@ server.get('/api/users/:id', (req,res) => {
     })
     .catch(error => {
         return;
-    });
+    })
 })
 
 server.delete('/api/users/:id', (req, res) => {
@@ -70,6 +71,32 @@ server.delete('/api/users/:id', (req, res) => {
         .catch(error => {
             res.status(500).json({ error: "The user could not be removed" });
         })
+    })
+    .catch(error => {
+        return;
+    })
+})
+
+server.put('/api/users/:id', (req, res) => {
+    if(!req.body.name || !req.body.bio) {
+        res.status(400).json({ error: "Please provide name and bio for the user." });
+        return;
+    }
+    getUser(req.params.id, res)
+    .then(user => {
+        db.update(user.id, req.body)
+        .then(() => {
+            getUser(user.id)
+            .then((newUser) => {
+                res.status(200).json(newUser);
+            })
+        })
+        .catch(error => {
+            res.status(500).json({ error: "The user information could not be modified." });
+        })
+    })
+    .catch(error => {
+        return;
     })
 })
 
