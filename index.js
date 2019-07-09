@@ -51,13 +51,26 @@ server.post('/api/users', (req, res) => {
 })
 
 server.get('/api/users/:id', (req,res) => {
-    getUser(req.params.i, res)
+    getUser(req.params.id, res)
     .then(user => {
         res.status(200).json(user);
     })
     .catch(error => {
         return;
     });
+})
+
+server.delete('/api/users/:id', (req, res) => {
+    getUser(req.params.id, res)
+    .then(user => {
+        db.remove(user.id)
+        .then(() => {
+            res.status(200).json(user);
+        })
+        .catch(error => {
+            res.status(500).json({ error: "The user could not be removed" });
+        })
+    })
 })
 
 server.listen(3000, (req, res) => {
